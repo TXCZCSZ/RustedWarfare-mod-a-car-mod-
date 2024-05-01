@@ -1,0 +1,36 @@
+RWini的执行文件格式是ini，其中有一个特殊的文件叫做all-units.template，它是全局模板文件。在这个文件中的代码相当于写在每个ini文件中。
+
+让我来简化一下这些节的介绍：
+
+1. [core]节：包含一些单位的属性代码，比如maxHp、name、price、mass等。每个单位必须有name、price、mass、radius和maxHp属性，否则游戏将报错。
+
+2. [graphics]节：用于读取单位的图像数据，代码包括image和imageScale。
+
+3. [movement]节：包含单位的运动属性代码，包括movementType（可填LAND、AIR、SEA）和moveSpeed（可以填写常量数字）。
+
+4. [attack]节：包含单位的攻击属性代码，包括canAttack（true/false）、canAttackLandUnits、canAttackFlyingUnits和canAttackUnderWaterUnits。
+
+接下来是一些可选的节：
+
+5. [turret]节：用于定义单位的炮塔属性，需要一个编号（比如[turret_1]），代码包括x、y、projectile和limitingRange等属性。
+
+6. [projectile]节：与[turret]节相匹配，用于定义抛射体的属性，包括directDamage、life和speed等属性。
+
+关于memory（内存）的定义和使用：
+
+在[core]节中定义memory的方法是使用@memory，例如：在[core]节下换行，写上@memory 人口:number。
+
+引用memory的方法是在相应的地方写memory.名称。需要注意的是，在一些地方是不能写动态值的，只能写常量。
+
+修改memory需要使用[hiddenAction]节，它是一个隐藏的行动节，不会显示在用户界面上，在逻辑计算时使用。代码包括autoTrigger和setUnitMemory，可以根据条件自动执行行动，并修改单位的memory。
+
+同时，还可以引用单位的属性，例如self.hp表示单位当前的生命值，self.maxHp表示单位的最大生命值，self.speed表示单位当前的速度，self.maxMoveSpeed表示单位的最大移动速度。
+
+还有一些其它的代码和技巧：
+
+- select(a,b,c)是一个三元运算符，如果a成立，则返回b，否则返回c。
+- 使用[action]节来实现用户输入，代码包括text和pos。该节的内容在用户点击时会自动触发。
+- 使用[action]节和[hiddenAction]节的自动触发功能，可以根据事件类型自动执行相应的行动。
+- 使用sendMessageTo和sendMessageWithTags在单位之间发送信息。在action/hiddenAction节中使用sendMessageWithData可以携带数据发送消息，并使用eventData("name", type="type")读取该数据。
+
+请注意，RWini是游戏的模组配置文件，可以与其他单位进行互动，但不能引用其数据。如果需要跨单位传输数据，可以使用消息相关的代码来实现。同时，每个单位的配置要写在不同的ini文件中，逻辑计算要写在单位的ini文件中。

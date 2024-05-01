@@ -1,0 +1,596 @@
+#成就
+[core]
+@memory 存活时间:number
+@memory 中介:unit
+[hiddenAction_标记]
+autoTrigger:if numberOfUnitsInAllTeams(withTag="成就模组")>0 and memory.中介==null
+setUnitMemory:中介=globalSearchForFirstUnit(withTag="成就模组")
+[hiddenAction_第一辆赛车]
+autoTrigger:if memory.存活时间==50 and numberOfUnitsInTeam(withTag="赛车")==0
+sendMessageTo:memory.中介
+sendMessageWithTags:获得成就
+sendMessageWithData:成就="第一辆赛车"
+temporarilyAddTags:赛车
+
+
+
+
+
+[core]
+maxHp:2000
+name:[赛车]
+mass:1000
+radius:10
+price:1200
+buildSpeed:55
+isBuilder:true
+displayDescription:666
+canNotBeDirectlyAttacked:true
+canNotBeDamaged:false
+autoTriggerCooldownTime:0
+autoTriggerCooldownTime_allowDangerousHighCPU:true
+@memory 油箱血量:number
+@memory 左上胎压:number
+@memory 右上胎压:number
+@memory 左下胎压:number
+@memory 右下胎压:number
+@memory 左上受击概率:number
+@memory 右上受击概率:number
+@memory 左下受击概率:number
+@memory 右下受击概率:number
+@memory 引擎血量:number
+@memory 驾驶员血量:number
+@memory 正常速度:number
+@memory 正常转弯速度:number
+@memory 左上加速:number
+@memory 右上加速:number
+@memory 左下加速:number
+@memory 右下加速:number
+@memory 左上受击:number
+@memory 右上受击:number
+@memory 左下受击:number
+@memory 右下受击:number
+@memory 吃道具冷却:number
+@memory 道具随机数:number
+@memory 氮气:number
+@memory 氮气加速度:number
+@memory 修复包数量:number
+@memory 环境温度:number
+@memory 引擎温度:number
+@memory 油箱温度:number
+@memory 左上温度:number
+@memory 左下温度:number
+@memory 右上温度:number
+@memory 右下温度:number
+@memory 引擎着火概率:number
+@memory 油箱爆炸概率:number
+@memory 前角度:number
+@memory 油箱最大血量:number
+@memory 引擎最大血量:number
+@memory 引擎受击概率:number
+@memory 油箱受击概率:number
+@memory 引擎减速度:number
+@memory 燃油:number
+@memory 能量:number
+
+@memory 大招:string
+@memory 大招加速度:number
+updateUnitMemoryRate:0
+updateUnitMemory:"""
+      存活时间=memory.存活时间+1,
+      油箱血量=select(memory.油箱血量<0,
+            0,
+            memory.油箱血量
+            ),
+      能量=select(memory.能量<0,
+            0,
+            select(
+                  memory.能量>=100,
+                  100,
+                  memory.能量)
+            ),
+      引擎血量=select(memory.引擎血量<0,
+            0,
+            memory.引擎血量
+            ),
+      燃油=select(memory.燃油<=0,
+            0,
+            select(self.isMoving,
+                  memory.燃油-0.005*(memory.油箱最大血量/(memory.油箱血量+1)),
+                  select(memory.燃油>=memory.油箱最大血量*0.3,
+                        memory.油箱最大血量*0.3,
+                        memory.燃油
+                        )
+                  )
+            ),
+      氮气=select(memory.氮气<=0,
+            0,
+            select(memory.氮气>=memory.油箱最大血量*0.15,
+                  memory.油箱最大血量*0.15,
+                  memory.氮气
+                  )
+            ),
+      引擎减速度=select(memory.引擎血量/memory.引擎最大血量>=0.8,
+            (memory.引擎最大血量/memory.引擎血量-1)*0.5,
+            select(memory.引擎血量/memory.引擎最大血量>=0.4 and memory.引擎血量/memory.引擎最大血量<0.8,
+                  memory.引擎最大血量/memory.引擎血量*0.8,
+                  select(memory.引擎血量/memory.引擎最大血量>=0.0 and memory.引擎血量/memory.引擎最大血量<0.4,
+                        memory.正常速度,
+                        0
+                        )
+                  )
+            ),
+      引擎温度=memory.引擎温度+select(self.isMoving,
+            select(memory.引擎血量>=memory.引擎血量*0.7,
+                  ((400-memory.引擎温度)/10000)*5,
+                  ((400-memory.引擎温度)/10000)*10
+            ),
+            ((memory.环境温度-memory.引擎温度)/10000)*1.8
+      
+      ),
+      左上胎压=select(memory.左上胎压<=0,
+            0,
+            memory.左上胎压-0.00001*(memory.左上受击+1)*(self.speed+0.1)
+            ),
+      右上胎压=select(memory.右上胎压<=0,
+            0,
+            memory.右上胎压-0.00001*(memory.右上受击+1)*(self.speed+0.1)
+            ),
+      左下胎压=select(memory.左下胎压<=0,
+            0,
+            memory.左下胎压-0.00001*(memory.左下受击+1)*(self.speed+0.1)
+            ),
+      右下胎压=select(memory.右下胎压<=0,
+            0,
+            memory.右下胎压-0.00001*(memory.右下受击+1)*(self.speed+0.1)
+            )
+      """
+[decal_氮气条外框]
+color:#FF00FFC7
+layer:onTop
+image:ROOT:assets/条框.png
+isVisible:if memory.氮气 > 0
+yOffsetAbsolute:2*${core.radius}
+alwaysStartDirAtZero:true
+imageScaleX:0.12*${core.radius}
+imageScaleY:0.1*${core.radius}
+[decal_氮气条]
+color:#FF00FFC7
+layer:onTop
+image:ROOT:assets/条.png
+isVisible:if memory.氮气 > 0
+yOffsetAbsolute:2*${core.radius}
+xOffsetAbsolute:-1.08*${core.radius}
+alwaysStartDirAtZero:true
+imageScaleX:(memory.氮气/(memory.油箱最大血量*0.15))*0.12*${core.radius}
+imageScaleY:0.1*${core.radius}
+[decal_燃料条外框]
+color:#FFF3940E
+layer:onTop
+image:ROOT:assets/条框.png
+isVisible:if memory.燃油 > 0
+yOffsetAbsolute:1.6*${core.radius}
+alwaysStartDirAtZero:true
+imageScaleX:0.12*${core.radius}
+imageScaleY:0.1*${core.radius}
+[decal_燃料条]
+color:#FFF3940E
+layer:onTop
+image:ROOT:assets/条.png
+isVisible:if memory.燃油 > 0
+yOffsetAbsolute:1.6*${core.radius}
+xOffsetAbsolute:-1.08*${core.radius}
+alwaysStartDirAtZero:true
+imageScaleX:(memory.燃油/(memory.油箱最大血量*0.3))*0.12*${core.radius}
+imageScaleY:0.1*${core.radius}
+[decal_能量条外框]
+color:#FFDD1AEB
+layer:onTop
+image:ROOT:assets/条框.png
+isVisible:if memory.能量 > 0
+yOffsetAbsolute:2.4*${core.radius}
+alwaysStartDirAtZero:true
+imageScaleX:0.12*${core.radius}
+imageScaleY:0.1*${core.radius}
+[decal_能量条]
+color:#FFDD1AEB
+layer:onTop
+image:ROOT:assets/条.png
+isVisible:if memory.能量 > 0
+yOffsetAbsolute:2.4*${core.radius}
+xOffsetAbsolute:-1.08*${core.radius}
+alwaysStartDirAtZero:true
+imageScaleX:memory.能量*0.01*0.12*${core.radius}
+imageScaleY:0.1*${core.radius}
+[action_使用大招]
+pos:0.1
+text:%{memory.大招}
+alwaysSinglePress:true
+buildSpeed:0
+isVisible:if not self.hasTags(includes='使用大招中')
+isLocked:if memory.能量 < 100
+temporarilyAddTags:使用大招中,大招初始化
+[hiddenAction_大招停止]
+autoTrigger:if self.hasTags(includes="使用大招中") and memory.能量<=0
+temporarilyRemoveTags:使用大招中
+attachments_onlyOnSlots:武器
+attachments_deleteNumUnits:99
+setUnitMemory:大招加速度=0
+[hiddenAction_持续冲锋大招]
+autoTrigger:if memory.大招=="持续冲锋" and self.hasTags(includes="使用大招中") and memory.能量!=0
+setUnitMemory:大招加速度=select(memory.大招加速度>=0.5 and not self.hasTags(includes="大招初始化"),memory.大招加速度+((memory.正常速度+memory.大招加速度)/500)*0.03,0.5),能量=memory.能量-0.1,氮气=memory.氮气+0.1
+temporarilyRemoveTags:大招初始化
+[hiddenAction_军备库大招]
+autoTrigger:if memory.大招=="军备库" and self.hasTags(includes="使用大招中") and memory.能量!=0
+setUnitMemory:大招加速度=select(memory.大招加速度>=0.01 and not self.hasTags(includes="大招初始化"),memory.大招加速度+((memory.正常速度+memory.大招加速度)/500)*0.01,0.3),能量=memory.能量-0.1
+attachments_addNewUnits:机枪
+attachments_onlyOnSlots:武器
+temporarilyRemoveTags:大招初始化
+[action_使用氮气加速]
+text:开启氮气加速
+buildSpeed:0
+pos:-1
+isVisible:if not self.hasTags(includes='氮气加速') and memory.氮气 != 0
+isLocked:if memory.氮气 == 0
+temporarilyAddTags:氮气加速
+setUnitMemory:氮气加速度=1+memory.氮气*0.01,引擎温度=memory.引擎温度+((800-memory.引擎温度)/10000)*5
+alwaysSinglePress:true
+[hiddenAction_消耗氮气]
+autoTrigger:if self.hasTags(includes='氮气加速') and memory.氮气 > 0
+setUnitMemory:氮气=memory.氮气-0.25,氮气加速度=0.5+memory.氮气*0.01,能量=memory.能量+select(self.hasTags(includes="使用大招中"),0,0.06)
+[hiddenAction_智能关闭氮气加速]
+autoTrigger:if memory.氮气 <= 0
+temporarilyRemoveTags:氮气加速
+setUnitMemory:氮气加速度=0
+[action_关闭使用氮气加速]
+text:关闭氮气加速
+buildSpeed:0
+pos:-1
+isVisible:if self.hasTags(includes='氮气加速')
+temporarilyRemoveTags:氮气加速
+setUnitMemory:氮气加速度=0
+alwaysSinglePress:true
+[hiddenAction_计算前角度]
+autoTrigger:if self.customTimer(laterThanSeconds=1)
+resetCustomTimer:true
+setUnitMemory:前角度=self.dir
+[hiddenAction_检测右转弯动作]
+autoTrigger:if self.dir > memory.前角度+50
+#showMessageToPlayer:右转弯
+setUnitMemory:"""氮气=memory.氮气+0.4,
+      左上胎压=memory.左上胎压-(0.0005*self.speed),
+      左下胎压=memory.左下胎压-(0.0005*self.speed),
+      右上胎压=memory.右上胎压-(0.0003*self.speed),
+      右下胎压=memory.右下胎压-(0.0003*self.speed)
+      """
+[hiddenAction_检测左转弯动作]
+
+autoTrigger:if self.dir < memory.前角度-50
+#showMessageToPlayer:左转弯
+setUnitMemory:"""氮气=memory.氮气+0.4,
+      左上胎压=memory.左上胎压-(0.0003*self.speed),
+      左下胎压=memory.左下胎压-(0.0003*self.speed),
+      右上胎压=memory.右上胎压-(0.0005*self.speed),
+      右下胎压=memory.右下胎压-(0.0005*self.speed)
+      """
+[hiddenAction_修改属性]
+autoTrigger:true
+setUnitStats:"""
+      moveSpeed=memory.正常速度+(-memory.引擎减速度)+memory.氮气加速度+memory.大招加速度,
+      maxTurnSpeed=memory.正常速度+(-memory.引擎减速度*0.5)+(memory.氮气加速度*0.5)+(memory.大招加速度*0.5)
+      """
+[hiddenAction_强制消除路径点]
+autoTrigger:if (not (memory.燃油 > 0)) or (memory.正常速度==memory.引擎减速度)
+clearAllWaypoints:true
+[hiddenAction_初始化]
+autoTrigger:if self.hasTags(includes="赋值完成")
+setUnitMemory:"""
+      油箱血量=memory.油箱最大血量,
+      燃油=memory.油箱最大血量*0.3,
+      引擎血量=memory.引擎最大血量,
+      左上胎压=200,右上胎压=200,
+      左下胎压=200,右下胎压=200,
+      环境温度=-18,
+      油箱温度=memory.环境温度,
+      引擎温度=memory.环境温度
+      """
+temporarilyRemoveTags:赋值完成
+[hiddenAction_受击]
+autoTriggerOnEvent:newMessage(withTag="受击")
+setUnitMemory:"""
+      油箱血量=select(rnd(0,1)<memory.油箱受击概率,
+            select(eventSource.hasTags(includes="后装甲") and eventData("穿深",type="number")>6,
+                  memory.油箱血量-rnd(0,0.8)*eventData("穿深",type="number"),
+                  select(eventSource.hasTags(includes="左装甲") and eventData("穿深",type="number")>5,
+                        memory.油箱血量-rnd(0,1)*eventData("穿深",type="number"),
+                        memory.油箱血量
+                  )
+            ),
+            memory.油箱血量
+      ),
+      引擎血量=select(rnd(0,1)<memory.引擎受击概率,
+            select(eventSource.hasTags(includes="前装甲") and eventData("穿深",type="number")>8,
+                  memory.引擎血量-rnd(0,0.6)*eventData("穿深",type="number"),
+                  select((eventSource.hasTags(includes="左装甲") or eventSource.hasTags(includes="右装甲")) and eventData("穿深",type="number")>6,
+                        memory.引擎血量-rnd(0,0.4)*eventData("穿深",type="number"),
+                        memory.引擎血量
+                  )
+            ),
+            memory.引擎血量
+      ),
+      左上受击=select((eventSource.hasTags(includes="前装甲") or eventSource.hasTags(includes="左装甲")) and eventData("穿深",type="number")>0 and rnd(0,5)<memory.左上受击概率,
+            memory.左上受击+rnd(0,1),
+            memory.左上受击
+      ),
+      右上受击=select((eventSource.hasTags(includes="前装甲") or eventSource.hasTags(includes="右装甲")) and eventData("穿深",type="number")>0 and rnd(0,5)<memory.右上受击概率,
+            memory.右上受击+rnd(0,1),
+            memory.右上受击
+      ),
+      左下受击=select((eventSource.hasTags(includes="后装甲") or eventSource.hasTags(includes="左装甲")) and eventData("穿深",type="number")>0 and rnd(0,5)<memory.左下受击概率,
+            memory.左下受击+rnd(0,1),
+            memory.左下受击
+      ),
+      右下受击=select((eventSource.hasTags(includes="后装甲") or eventSource.hasTags(includes="右装甲")) and eventData("穿深",type="number")>0 and rnd(0,5)<memory.右下受击概率,
+            memory.右下受击+rnd(0,1),
+            memory.右下受击
+      ),
+      左上胎压=select((eventSource.hasTags(includes="前装甲") or eventSource.hasTags(includes="左装甲")) and eventData("穿深",type="number")>0 and rnd(0,5)<memory.左上受击概率,
+            memory.左上胎压-rnd(20,80),
+            memory.左上胎压
+      ),
+      右上胎压=select((eventSource.hasTags(includes="前装甲") or eventSource.hasTags(includes="右装甲")) and eventData("穿深",type="number")>0 and rnd(0,5)<memory.右上受击概率,
+            memory.右上胎压-rnd(20,80),
+            memory.右上胎压
+      ),
+      左下胎压=select((eventSource.hasTags(includes="后装甲") or eventSource.hasTags(includes="左装甲")) and eventData("穿深",type="number")>0 and rnd(0,5)<memory.左下受击概率,
+            memory.左下胎压-rnd(20,80),
+            memory.左下胎压
+      ),
+      右下胎压=select((eventSource.hasTags(includes="后装甲") or eventSource.hasTags(includes="右装甲")) and eventData("穿深",type="number")>0 and rnd(0,5)<memory.右下受击概率,
+            memory.右下胎压-rnd(20,80),
+            memory.右下胎压
+      )
+      """
+[action_模块开]
+pos:3
+isVisible:if not self.hasTags(includes="查看模块")
+isActive:true
+buildSpeed:0
+displayType:infoOnlyNoBox
+text:速度(%{self.speed}/%{self.maxMoveSpeed})\n燃油(%{memory.燃油}/%{memory.油箱最大血量*0.3})\n氮气(%{memory.氮气}/%{memory.油箱最大血量*0.15})\n能量(%{memory.能量}/100)
+temporarilyAddTags:查看模块
+alwaysSinglePress:true
+[action_模块关]
+pos:3
+isVisible:if self.hasTags(includes="查看模块")
+isActive:true
+buildSpeed:0
+displayType:infoOnlyNoBox
+text:速度(%{self.speed}/%{self.maxMoveSpeed})\n燃油(%{memory.燃油}/%{memory.油箱最大血量*0.3})\n氮气(%{memory.氮气}/%{memory.油箱最大血量*0.15})\n能量(%{memory.能量}/100)
+temporarilyRemoveTags:查看模块
+alwaysSinglePress:true
+[action_显示油箱血量正常]
+pos:4
+isVisible:"""if self.hasTags(includes="查看模块") 
+      and memory.油箱血量>=memory.油箱最大血量*0.8
+      """
+isActive:false
+displayType:infoOnlyNoBox
+buildSpeed:0
+text:温度(%{memory.油箱温度}℃)\n油箱(%{memory.油箱血量}/%{memory.油箱最大血量})\n燃油(%{memory.燃油}/%{memory.油箱最大血量*0.3})\n耗油速度:%{60*0.01*(memory.油箱最大血量/(memory.油箱血量+1))}/s
+iconImage:ROOT:assets/油箱绿.png
+[action_显示油箱血量受损]
+pos:4
+isVisible:"""if self.hasTags(includes="查看模块") 
+      and memory.油箱血量>=memory.油箱最大血量*0.4
+      and memory.油箱血量<memory.油箱最大血量*0.8
+      """
+isActive:false
+displayType:infoOnlyNoBox
+buildSpeed:0
+text::温度(%{memory.油箱温度}℃)\n油箱(%{memory.油箱血量}/%{memory.油箱最大血量})\n燃油(%{memory.燃油}/%{memory.油箱最大血量*0.3})\n耗油速度:%{60*0.01*(memory.油箱最大血量/(memory.油箱血量+1))}/s
+iconImage:ROOT:assets/油箱黄.png
+[action_显示油箱血量损坏]
+pos:4
+isVisible:"""if self.hasTags(includes="查看模块") 
+      and memory.油箱血量<memory.油箱最大血量*0.4
+      """
+isActive:false
+displayType:infoOnlyNoBox
+buildSpeed:0
+text::温度(%{memory.油箱温度}℃)\n油箱(%{memory.油箱血量}/%{memory.油箱最大血量})\n燃油(%{memory.燃油}/%{memory.油箱最大血量*0.3})\n耗油速度:%{60*0.01*(memory.油箱最大血量/(memory.油箱血量+1))}/s
+iconImage:ROOT:assets/油箱红.png
+[action_显示引擎血量正常]
+pos:5
+isVisible:"""if self.hasTags(includes="查看模块") 
+      and memory.引擎血量>=memory.引擎最大血量*0.8
+      """
+isActive:false
+displayType:infoOnlyNoBox
+buildSpeed:0
+text:温度(%{memory.引擎温度}℃)\n引擎(%{memory.引擎血量}/%{memory.引擎最大血量})\n速度(%{self.speed}/%{self.maxMoveSpeed})
+iconImage:ROOT:assets/引擎绿.png
+[action_显示引擎血量受损]
+pos:5
+isVisible:"""if self.hasTags(includes="查看模块") 
+      and memory.引擎血量>=memory.引擎最大血量*0.4
+      and memory.引擎血量<memory.引擎最大血量*0.8
+      """
+isActive:false
+displayType:infoOnlyNoBox
+buildSpeed:0
+text:温度(%{memory.引擎温度}℃)\n引擎(%{memory.引擎血量}/%{memory.引擎最大血量})\n速度(%{self.speed}/%{self.maxMoveSpeed})
+iconImage:ROOT:assets/引擎黄.png
+[action_显示引擎血量损坏]
+pos:5
+isVisible:"""if self.hasTags(includes="查看模块") 
+      and memory.引擎血量<memory.引擎最大血量*0.4
+      """
+isActive:false
+displayType:infoOnlyNoBox
+buildSpeed:0
+text:温度(%{memory.引擎温度}℃)\n引擎(%{memory.引擎血量}/%{memory.引擎最大血量})\n速度(%{self.speed}/%{self.maxMoveSpeed})
+iconImage:ROOT:assets/引擎红.png
+[action_显示左上胎压正常]
+pos:6
+isVisible:"""if self.hasTags(includes="查看模块") 
+      and memory.左上胎压>=200*0.8
+      """
+isActive:false
+displayType:infoOnlyNoBox
+buildSpeed:0
+text:左上轮胎(%{memory.左上胎压}/200)
+iconImage:ROOT:assets/轮子绿.png
+[action_显示左上胎压受损]
+pos:6
+isVisible:"""if self.hasTags(includes="查看模块") 
+      and memory.左上胎压>=200*0.4
+      and memory.左上胎压<200*0.8
+      """
+isActive:false
+displayType:infoOnlyNoBox
+buildSpeed:0
+text:左上轮胎(%{memory.左上胎压}/200)
+iconImage:ROOT:assets/轮子黄.png
+[action_显示左上胎压损坏]
+pos:6
+isVisible:"""if self.hasTags(includes="查看模块") 
+      and memory.左上胎压<200*0.4
+      """
+isActive:false
+displayType:infoOnlyNoBox
+buildSpeed:0
+text:左上轮胎(%{memory.左上胎压}/200)
+iconImage:ROOT:assets/轮子红.png
+
+[action_显示右上胎压正常]
+pos:7
+isVisible:"""if self.hasTags(includes="查看模块") 
+      and memory.右上胎压>=200*0.8
+      """
+isActive:false
+displayType:infoOnlyNoBox
+buildSpeed:0
+text:右上轮胎(%{memory.右上胎压}/200)
+iconImage:ROOT:assets/轮子绿.png
+[action_显示右上胎压受损]
+pos:7
+isVisible:"""if self.hasTags(includes="查看模块") 
+      and memory.右上胎压>=200*0.4
+      and memory.右上胎压<200*0.8
+      """
+isActive:false
+displayType:infoOnlyNoBox
+buildSpeed:0
+text:右上轮胎(%{memory.右上胎压}/200)
+iconImage:ROOT:assets/轮子黄.png
+[action_显示右上胎压损坏]
+pos:7
+isVisible:"""if self.hasTags(includes="查看模块") 
+      and memory.右上胎压<200*0.4
+      """
+isActive:false
+displayType:infoOnlyNoBox
+buildSpeed:0
+text:右上轮胎(%{memory.右上胎压}/200)
+iconImage:ROOT:assets/轮子红.png
+[action_显示左下胎压正常]
+pos:8
+isVisible:"""if self.hasTags(includes="查看模块") 
+      and memory.左下胎压>=200*0.8
+      """
+isActive:false
+displayType:infoOnlyNoBox
+buildSpeed:0
+text:左下轮胎(%{memory.左下胎压}/200)
+iconImage:ROOT:assets/轮子绿.png
+[action_显示左下胎压受损]
+pos:8
+isVisible:"""if self.hasTags(includes="查看模块") 
+      and memory.左下胎压>=200*0.4
+      and memory.左下胎压<200*0.8
+      """
+isActive:false
+displayType:infoOnlyNoBox
+buildSpeed:0
+text:左下轮胎(%{memory.左下胎压}/200)
+iconImage:ROOT:assets/轮子黄.png
+[action_显示左下胎压损坏]
+pos:8
+isVisible:"""if self.hasTags(includes="查看模块") 
+      and memory.左下胎压<200*0.4
+      """
+isActive:false
+displayType:infoOnlyNoBox
+buildSpeed:0
+text:左下轮胎(%{memory.左下胎压}/200)
+iconImage:ROOT:assets/轮子红.png
+[action_显示右下胎压正常]
+pos:9
+isVisible:"""if self.hasTags(includes="查看模块") 
+      and memory.右下胎压>=200*0.8
+      """
+isActive:false
+displayType:infoOnlyNoBox
+buildSpeed:0
+text:右下轮胎(%{memory.右下胎压}/200)
+iconImage:ROOT:assets/轮子绿.png
+[action_显示右下胎压受损]
+pos:9
+isVisible:"""if self.hasTags(includes="查看模块") 
+      and memory.右下胎压>=200*0.4
+      and memory.右下胎压<200*0.8
+      """
+isActive:false
+displayType:infoOnlyNoBox
+buildSpeed:0
+text:右下轮胎(%{memory.右下胎压}/200)
+iconImage:ROOT:assets/轮子黄.png
+[action_显示右下胎压损坏]
+pos:9
+isVisible:"""if self.hasTags(includes="查看模块") 
+      and memory.右下胎压<200*0.4
+      """
+isActive:false
+displayType:infoOnlyNoBox
+buildSpeed:0
+text:右下轮胎(%{memory.右下胎压}/200)
+iconImage:ROOT:assets/轮子红.png
+[movement]
+moveSpeed:3
+maxTurnSpeed:3
+moveSlidingMode:true
+moveDecelerationSpeed:0.008
+moveAccelerationSpeed:0.2
+turnAcceleration:0.5
+reverseSpeedPercentage:0.2
+movementType:LAND
+moveIgnoringBody:false
+[graphics]
+image:ROOT:assets/空白.png
+scaleImagesTo:1
+image_shadow:ROOT:assets/阴影.png
+shadowOffsetX:1
+shadowOffsetY:7
+dustEffect:true
+showHealthBar:false
+[attack]
+canAttack:false
+canAttackFlyingUnits:false
+canAttackUnderwaterUnits:false
+canAttackLandUnits:true
+showRangeUIGuide:false
+
+[turret_1]
+x:0
+y:0
+projectile:1
+canAttack:false
+[projectile_1]
+directDamage:1
+areaDamage:1
+areaRadius:1
+life:60
+friendlyFire:true
+speed:10
+largeHitEffect:true

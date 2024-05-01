@@ -1,0 +1,50 @@
+RWini可以直接执行的文件格式是ini，而有个特殊的文件，叫all-units.template，他是全局模板文件，也就是说，在这个文件里的代码，也就相当于写在了每一个ini文件里
+接下来我说一些该语言所拥有的节
+[core]节，核心节，它里边写一些单位属性之类的代码，比如maxHp,name,price,mass等等，其中，一个单位所必须有的属性是name,price,mass,radius,maxHp，没有这些代码，游戏将报错
+可是，每个节都有一定的代码，必要的不能少，没有的也不能写，不可以凭空捏造代码
+第二个必须的节:[graphics]节，图像节，它是读取单位图像数据的节，代码有image:图片路径，imageScale
+好的，继续介绍，第三个必要的节:[movement]，运动节，它里面的代码有:movementType:可以填LAND,AIR,SEA，moveSpeed:运动速度，可以填常量，一个数字，这俩代码是必须有的代码
+非常好，接下来再说一个必须有的节:[attack]攻击节，它里面有的代码是canAttack:true/false,如果写了canAttack:true，那么就要写一下这三个:canAttackLandUnits,canAttackFlyingUnits,canAttackUnderWaterUnits
+请注意，如果不需要移动，也要写[movement]节，但是移动类型要写BUILDING，移动速度不用写
+请注意，接下来说的节是不必须写的节，但如果要有相应的功能还是要写的
+[turret]节，炮塔节，它的节名称需要有编号，像这样[turret_1]，它的下面的代码有x:代表炮塔的x相对坐标，y:代表炮塔的y相对坐标,projectile:该炮塔的抛射体，也就是发射的炮弹，填抛射体节的编号，之后我会介绍抛射体节，limitingRange:限制范围，该炮塔的攻击范围，delay:炮塔的攻击间隔，填帧数，60为一秒
+接下来介绍和[turret]节相匹配的[projectile]节，抛射体节，他需要编号，代码有:directDamage:直接伤害，填静态常量值,life:存活时间，填静态常量数字，60为一秒，speed:炮弹的速度，和单位移动速度是一样的单位
+@memory 名字:类型是定义memory的方法，memory就相当于变量，在[core]节定义
+定义memory的例子:[core]换行@memory 人口:number
+不错，希望你继续记得一个原则:我没说过的代码和节，不要瞎编
+引用memory就是在相应的地方写memory.名字 ，不可以写动态值的地方不可以写memory，我之前有告诉你哪些只能写常量
+修改memory需要一个节[hiddenAction]，隐藏行动节，它不会显示在用户UI上，所以很适合做逻辑计算，它也需要写编号，它的代码有:autoTrigger:写逻辑语句，当条件满足时会自动执行改行动，例子:autoTrigger:if memory.钱 > 10
+很好，接下来介绍hiddenAction节的第二个代码，setUnitMemory:可以修改单位内存用法:setUnitMemory:memory的名字=值
+了，memory是可以定义多个的
+很好，不过我再告诉你引用单位属性的办法，就可以改进代码了:self.hp可以引用自身目前生命值，self.maxHp可以引用最大生命值，self.speed是自身目前速度,self.maxMoveSpeed是最大移动速度
+select(a,b,c)他相当于一个三元运算符，如果a成立，那么返回b，否则返回c
+请注意，现在我们在学习RWini，不只是ini文件，而是一个游戏下的模组，ini是他的配置文件，所以可以进行这些
+例子:
+[hiddenAction_持续冲锋大招]
+autoTrigger:if memory.大招=="持续冲锋" and self.hasTags(includes="使用大招中") and memory.能量!=0
+setUnitMemory:大招加速度=select(memory.大招加速度>=0.5 and not self.hasTags(includes="大招初始化"),memory.大招加速度+((memory.正常速度+memory.大招加速度)/500)*0.03,0.5),能量=memory.能量-0.1,氮气=memory.氮气+0.1
+temporarilyRemoveTags:大招初始化
+tag是我没说到的一个东西，我给你补充一下，tag就是标签，每个单位都可以用temporarilyRemoveTags
+如果要打上标签，那么就把remove改成add
+请注意，单位的memory并不是单位的属性，所以定义memory并不会影响单位的属性，如果要写装甲，请用core节的armour:静态常量数字
+单位的属性不能用setUnitMemory修改，只能用setUnitStats修改
+setUnitMemory与setUnitStats是action/hiddenAction节下的代码
+引用单位属性应该写self.……
+autoTrigger后边，应该写上if ，再写条件语句
+接下来教你如何让用户输入，需要用到一个叫[action]的节，他需要编号，与hiddenAction的不同是他显示在用户的操作栏中，代码有text:显示的文字,pos:在操作栏的排序，填常量数字，hiddenAction中的代码都可以在action节使用
+action节的内容，在用户点击时会自动触发，不用再次检测
+请注意，hiddenAction只是不可见而已，并没有特殊的，所以hiddenAction节的东西在action节也都可以用，你为什么不在action节直接触发修改血量，而是要自动检测用户点击呢，RWini并没有检测点击的代码，action节在点击时会自动触发，不用再检测
+isLocked代码只是锁定用户的界面上的action，让他不能点击，实际上他还是可以运行的
+setUnit和setUnitStats都是可以写多个参数的，要用逗号隔开
+再给你说几个代码，projectile节可以写tags:标签1,标签2;action/hiddenAction节的自动触发还有一种，就是事件触发，这样写:autoTriggerOnEvent:事件类型，事件类型有且只有这几个:created(单位被建造出来时)，tookDamage(withTag="抛射体标签")受伤时,newMessage(withTag=信息标签)，信息会在后边讲到
+接下来说关于信息(message)的用法，都是action/hiddenAction节的代码，sendMessageTo:单位参考，把信息发送给哪个单位;sendMessageWithTags:标签，发送的信息携带的标签
+注意，如果一个行动节里写上sendMessageTo了，那么必须写sendMessageWithTags，反过来也是一样的，这俩必须都有，sendMessageWithData也是要和他们在一起，只是可以不加也可以加
+如果你想引用发送信息过来的单位，那么请用eventSource来表示单位参考
+如果你想输出信息，那么不要用addMessage，用showMessageToAllPlayers这样就可以显示在玩家的屏幕上
+请注意，要引用eventSource之类的东西，要用${}
+注意，RWini是一个游戏的模组配置文件，所以他可以和别的单位互动，但是不能引用其数据，如果要跨单位传输数据，可以用Message相关的代码来写，另外，sendMessageWithData:名字=数据，可以将发送的消息带上数据，读取该数据则可以用eventData("名字",type=""类型)
+不同的单位要写在不同的ini里
+请注意，RWini没有项目配置文件，逻辑计算要写在单位的ini里，请把握好关系
+请注意，不可以引用其他的单位，如果要跨单位传输数据，可以用Message
+
+

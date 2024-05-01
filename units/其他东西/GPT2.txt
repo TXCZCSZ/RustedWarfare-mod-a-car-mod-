@@ -1,0 +1,55 @@
+在RWini中，有一个文件格式叫做ini，其中有一个特殊的文件名为"all-units.template"，它是全局模板文件。在这个文件中的代码会被写入每个ini文件中。
+
+接下来我来介绍一些RWini语言中的节：
+
+- [core]节是核心节，用来编写单位属性的代码，比如maxHp、name、price、mass等等。其中，每个单位必须具备的属性是name、price、mass、radius和maxHp，如果没有这些属性的代码，游戏将报错。
+- [graphics]节是图像节，用来读取单位图像数据的代码，包括image:图片路径和imageScale。
+- [movement]节是运动节，里面的代码包括movementType:可以填写LAND、AIR或SEA，以及moveSpeed:运动速度，可以填写常量数字。这两行代码是必须的。
+- [attack]节是攻击节，里面的代码包括canAttack:true/false。如果写了canAttack:true，那么就需要写下面三行代码：canAttackLandUnits、canAttackFlyingUnits和canAttackUnderWaterUnits。
+
+请注意，即使单位不需要移动，也需要写[movement]节，但是移动类型要填写BUILDING，移动速度不用写。
+
+下面介绍一些不必须写的节，但是如果希望拥有相应功能，仍然需要写入：
+
+- [turret]节是炮塔节，节名称需要带有编号，例如[turret_1]。下面的代码包括x:代表炮塔的x坐标、y:代表炮塔的y坐标、projectile:代表该炮塔发射的抛射体，填写抛射体节的编号，以及limitingRange:限制范围，表示该炮塔的攻击范围，还有delay:炮塔的攻击间隔，填写以帧数计算的值，60表示一秒。
+
+接下来介绍与[turret]节相匹配的[projectile]节，抛射体节，同样需要带有编号。其中的代码包括directDamage:直接伤害，填写静态常量值；life:存活时间，填写静态常量数字，60表示一秒；speed:炮弹的速度，与单位的移动速度单位相同。
+
+关于memory的引用，请使用${}符号来引用，例如self.hp表示引用自身的当前生命值，self.maxHp表示引用最大生命值，self.speed表示引用当前速度，self.maxMoveSpeed表示引用最大移动速度。
+
+函数select(a,b,c)可以当做一个三元运算符，如果a成立，则返回b，否则返回c。
+
+请注意，现在我们正在学习RWini，它不仅仅是ini文件，而是游戏下的一个模组配置文件，ini只是其中的配置文件之一。因此，我们可以进行更多的操作。
+
+举个例子：
+
+[hiddenAction_持续冲锋大招]
+autoTrigger:if memory.大招=="持续冲锋" and self.hasTags(includes="使用大招中") and memory.能量!=0
+setUnitMemory:大招加速度=select(memory.大招加速度>=0.5 and not self.hasTags(includes="大招初始化"),memory.大招加速度+((memory.正常速度+memory.大招加速度)/500)*0.03,0.5),能量=memory.能量-0.1,氮气=memory.氮气+0.1
+temporarilyRemoveTags:大招初始化
+
+在以上示例中，我们定义了一个hiddenAction节，命名为"持续冲锋大招"。其中的代码通过条件判断自动触发，然后执行一系列的操作，包括修改单位的memory。在这里，我们引用了一些属性和变量作为计算的参数。
+
+请注意，memory是可以定义多个的。而且，在hiddenAction节中，我们需要使用setUnitMemory来修改单位的memory。
+
+在RWini中，还有一个叫做tag的概念，它是标签的意思。每个单位可以通过temporarilyRemoveTags来使用tag。如果想要添加标签，请将remove改为add。
+
+请注意，单位的memory不是单位的属性，因此定义memory不会影响单位的属性。如果想要写入装甲属性，请使用core节的armour:静态常量数字。
+
+单位的属性不能使用setUnitMemory进行修改，而是使用setUnitStats。
+
+sendMessageTo和sendMessageWithTags都属于action/hiddenAction节下的代码，前者用于将信息发送给指定单位，后者用于携带标签的信息发送。
+
+如果想要引用发送信息的单位，请使用eventSource。
+
+如果要输出信息，请使用showMessageToAllPlayers，这样就可以在玩家屏幕上显示信息。
+
+请注意，在引用eventSource等内容时，要使用${}符号。
+
+RWini是游戏的一个模组配置文件，因此它可以与其他单位互动，但不能引用其数据。如果需要跨单位传输数据，可以使用与Message相关的代码。
+
+请注意，不同的单位需要写入不同的ini文件。
+
+最后，还有一点需要注意的是，在RWini中没有项目配置文件，逻辑计算需要写入单位的ini文件中，请注意好它们之间的关系。
+
+另外，请不要编写我没有提到过的代码和节，要遵循RWini的语法和规则。希望以上内容对你有帮助！

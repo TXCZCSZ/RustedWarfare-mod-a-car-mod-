@@ -1,0 +1,15 @@
+[decal_texture]
+imageStack:ROOT:assets/weapons/机炮.png*10
+imageScale:0.7
+layer:afterBody
+onlyWhileAlive:true
+dirOffset:0
+teamColors:true
+stack_frameOffset:1
+isVisible:true
+stack_hOffset:0.5
+yOffsetRelative:3
+total_frames:10
+stack_indexCount:10
+stack_indexStart:0
+stack_drawInReverseOrder:false

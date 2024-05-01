@@ -1,0 +1,96 @@
+[core]
+name:装甲
+maxHp:10
+mass:1000
+radius:10
+price:1200
+armour:1
+tags:装甲
+selfRegenRate:0.01
+disableDeathOnZeroHp:true
+@memory 穿深:number
+@memory 厚度:number
+updateUnitMemory:"""
+      厚度=self.hp*${core.armour},
+      穿深=0
+      """
+[hiddenAction_受击机枪]
+autoTriggerOnEvent:tookDamage(withTag="机枪")
+setUnitMemory:"""
+      穿深=select(memory.厚度<8,
+      8-memory.厚度,
+      0
+      )
+      """
+sendMessageTo:self.parent
+sendMessageWithTags:受击
+sendMessageWithData:穿深=memory.穿深
+[hiddenAction_受击机炮]
+autoTriggerOnEvent:tookDamage(withTag="机炮")
+setUnitMemory:"""
+      穿深=select(memory.厚度<15,
+      15-memory.厚度,
+      0
+      )
+      """
+sendMessageTo:self.parent
+sendMessageWithTags:受击
+sendMessageWithData:穿深=memory.穿深
+#showMessageToAllPlayers:装甲穿深%{memory.穿深} 厚度%{memory.厚度}
+[graphics]
+image:ROOT:assets/空白.png
+showHealthBar:false
+[attack]
+canAttack:false
+[movement]
+movementType:LAND
+[decal_选框后]
+color:#FFFF0000
+layer:onTop
+image:ROOT:assets/选框.png
+imageScale:0.4
+isVisible:"""if self.hasTags(
+            includes="后装甲"
+            ) 
+      and self.hasGlobalTeamTags(
+            includes="debug"
+            )
+      """
+[decal_选框前]
+color:#FFFFFF00
+layer:onTop
+image:ROOT:assets/选框.png
+imageScale:0.4
+isVisible:"""if self.hasTags(
+            includes="前装甲"
+            ) 
+      and self.hasGlobalTeamTags(
+            includes="debug"
+            )
+      """
+[decal_选框左]
+color:#FF0000FF
+layer:onTop
+image:ROOT:assets/选框.png
+imageScale:0.4
+isVisible:"""if self.hasTags(
+            includes="左装甲"
+            ) 
+      and self.hasGlobalTeamTags(
+            includes="debug"
+            )
+      """
+[decal_选框右]
+color:#FF9800FF
+layer:onTop
+image:ROOT:assets/选框.png
+imageScale:0.4
+isVisible:"""if self.hasTags(
+            includes="右装甲"
+            ) 
+      and self.hasGlobalTeamTags(
+            includes="debug"
+            )
+      """
+
+
